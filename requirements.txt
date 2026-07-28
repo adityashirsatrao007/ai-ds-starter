@@ -12,7 +12,7 @@ scikit-learn>=1.9.0
 
 # Visualization
 matplotlib>=3.11.1
-seaborn>=0.12
+seaborn>=0.13.2
 
 # Experiment tracking
 wandb>=0.28.1
