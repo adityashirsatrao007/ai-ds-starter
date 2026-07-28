@@ -3,8 +3,18 @@ name: CI
 on:
   push:
     branches: [main, master]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".gitignore"
+      - "LICENSE"
+      - ".github/CODEOWNERS"
   pull_request:
     branches: [main, master]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,40 +24,71 @@ env:
   PYTHON_VERSION: "3.12"
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      src: ${{ steps.filter.outputs.src }}
+      tests: ${{ steps.filter.outputs.tests }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+        id: filter
+        with:
+          filters: |
+            src:
+              - 'src/**'
+            tests:
+              - 'tests/**'
+
   lint:
+    needs: changes
+    if: ${{ needs.changes.outputs.src == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
+          cache-dependency-path: "requirements.txt"
+      - run: pip install -r requirements.txt
       - run: pip install ruff
       - run: ruff check src/ tests/
 
   typecheck:
+    needs: changes
+    if: ${{ needs.changes.outputs.src == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-      - run: pip install mypy pyright
+          cache-dependency-path: "requirements.txt"
+      - run: pip install -r requirements.txt
+      - run: pip install mypy
       - run: mypy src/ --ignore-missing-imports
 
   test:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests == 'true' || needs.changes.outputs.src == 'true' }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+      fail-fast: false
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ matrix.python-version }}
           cache: pip
+          cache-dependency-path: "requirements.txt"
       - run: pip install -r requirements.txt
       - run: pip install pytest pytest-cov
       - run: pytest tests/ --cov=src/ --cov-report=xml
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc60cb7d6142ee3
         with:
           file: ./coverage.xml
           fail_ci_if_error: false

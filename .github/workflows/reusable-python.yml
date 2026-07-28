@@ -1,0 +1,37 @@
+name: Reusable Python Setup
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        required: false
+        type: string
+        default: "3.12"
+      install-dvc:
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      WANDB_API_KEY:
+        required: false
+      HF_TOKEN:
+        required: false
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: pip
+          cache-dependency-path: "requirements.txt"
+      - run: pip install --upgrade pip
+      - run: pip install -r requirements.txt
+      - if: ${{ inputs.install-dvc }}
+        run: pip install dvc
+      - if: ${{ secrets.WANDB_API_KEY != '' }}
+        run: echo "WANDB_API_KEY configured"
+        env:
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}

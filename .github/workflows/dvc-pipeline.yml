@@ -8,31 +8,37 @@ on:
       - "dvc.yaml"
       - "dvc.lock"
       - ".dvc/**"
+      - "params.yaml"
+  workflow_dispatch:
 
 env:
   PYTHON_VERSION: "3.12"
-  DVC_REMOTE: ${{ secrets.DVC_REMOTE }}
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
 jobs:
   repro:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          lfs: true
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
+          cache-dependency-path: "requirements.txt"
 
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install dvc[s3]
-          pip install -r requirements.txt
+      - name: Cache DVC
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            .dvc/cache
+            .dvc/tmp
+          key: dvc-${{ hashFiles('dvc.lock', 'dvc.yaml') }}
+          restore-keys: |
+            dvc-
+
+      - run: pip install --upgrade pip
+      - run: pip install -r requirements.txt
+      - run: pip install dvc
 
       - name: Pull DVC data
         run: dvc pull --run-cache || echo "No remote configured yet"
@@ -45,8 +51,6 @@ jobs:
           dvc push
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add dvc.lock .dvc/ data/ models/
-          git commit -m "chore: update DVC pipeline results [skip ci]" || echo "No changes"
-
-      - name: Push commit
-        run: git push
+          git add dvc.lock .dvc/ metrics.json
+          git diff --quiet && echo "No changes" || git commit -m "chore: update DVC pipeline [skip ci]"
+          git push
