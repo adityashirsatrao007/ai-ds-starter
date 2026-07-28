@@ -1,0 +1,20 @@
+stages:
+  train:
+    cmd: python src/train.py
+    deps:
+      - src/train.py
+      - src/config.py
+    outs:
+      - models/model.pkl:
+          cache: true
+    params:
+      - lr
+      - epochs
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+      - src/evaluate.py
+      - models/model.pkl
+    metrics:
+      - metrics.json:
+          cache: false

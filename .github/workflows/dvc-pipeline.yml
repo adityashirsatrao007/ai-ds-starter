@@ -1,0 +1,52 @@
+name: DVC Pipeline
+
+on:
+  push:
+    paths:
+      - "data/**"
+      - "src/**"
+      - "dvc.yaml"
+      - "dvc.lock"
+      - ".dvc/**"
+
+env:
+  PYTHON_VERSION: "3.12"
+  DVC_REMOTE: ${{ secrets.DVC_REMOTE }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+  repro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install dvc[s3]
+          pip install -r requirements.txt
+
+      - name: Pull DVC data
+        run: dvc pull --run-cache || echo "No remote configured yet"
+
+      - name: Reproduce pipeline
+        run: dvc repro
+
+      - name: Push results
+        run: |
+          dvc push
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add dvc.lock .dvc/ data/ models/
+          git commit -m "chore: update DVC pipeline results [skip ci]" || echo "No changes"
+
+      - name: Push commit
+        run: git push

@@ -1,0 +1,38 @@
+name: Deploy Model
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment target"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  PYTHON_VERSION: "3.12"
+  HUGGINGFACE_TOKEN: ${{ secrets.HF_TOKEN }}
+  WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Deploy to Hugging Face
+        if: ${{ secrets.HF_TOKEN != '' }}
+        run: |
+          pip install huggingface-hub
+          python scripts/deploy_to_hf.py
+      - name: Deploy to Docker
+        run: |
+          echo "docker build -t model:${{ github.sha }} ."
