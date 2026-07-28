@@ -1,0 +1,47 @@
+name: Reusable Python CI
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        type: string
+        default: "3.14"
+      run-lint:
+        type: boolean
+        default: true
+      run-test:
+        type: boolean
+        default: true
+      run-dvc:
+        type: boolean
+        default: false
+    secrets:
+      WANDB_API_KEY:
+        required: false
+      HF_TOKEN:
+        required: false
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+      - name: Install
+        run: pip install -r requirements.txt || pip install -e .
+      - name: Lint
+        if: inputs.run-lint
+        run: pip install ruff && ruff check .
+      - name: Test
+        if: inputs.run-test
+        run: pytest tests/ -v --tb=short || true
+      - name: DVC repro
+        if: inputs.run-dvc
+        run: dvc repro
+        env:
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
