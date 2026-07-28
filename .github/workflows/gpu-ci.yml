@@ -11,7 +11,7 @@ jobs:
       WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
