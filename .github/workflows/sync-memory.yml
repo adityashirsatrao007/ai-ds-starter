@@ -1,0 +1,23 @@
+name: Sync MEMORY Knowledge
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [sync-memory]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pull MEMORY rules
+        run: |
+          curl -sL "https://api.github.com/repos/adityashirsatrao007/MEMORY/contents/GEMINI.md" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -o .clinerules 2>/dev/null || echo "No MEMORY access"
+      - name: Apply if changed
+        run: |
+          if git diff --quiet .clinerules 2>/dev/null; then
+            echo "No changes"
+          else
+            git add .clinerules && git commit -m "sync: MEMORY knowledge update" && git push || true
+          fi
