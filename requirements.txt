@@ -24,7 +24,7 @@ wandb>=0.28.1
 
 # Utilities
 tqdm>=4.70.0
-pyyaml>=6.0
+pyyaml>=6.0.3
 python-dotenv>=1.2.2
 
 # Dev tools
