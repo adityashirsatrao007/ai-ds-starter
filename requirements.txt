@@ -15,7 +15,7 @@ matplotlib>=3.7
 seaborn>=0.12
 
 # Experiment tracking
-wandb>=0.16
+wandb>=0.28.1
 # mlflow>=2.8
 
 # NLP
