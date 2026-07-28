@@ -1,7 +1,7 @@
 # Core
 numpy>=1.26
 pandas>=2.0
-scipy>=1.11
+scipy>=1.17.1
 
 # ML
 scikit-learn>=1.3
