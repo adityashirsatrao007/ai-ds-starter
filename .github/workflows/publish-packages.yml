@@ -1,0 +1,31 @@
+name: Publish to GitHub Packages
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Build package
+        run: |
+          pip install build
+          python -m build
+      - name: Publish to PyPI
+        run: |
+          pip install twine
+          python -m twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: \${{ secrets.PYPI_TOKEN }}
+
