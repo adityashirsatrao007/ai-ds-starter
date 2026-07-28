@@ -1,4 +1,4 @@
 def test_imports():
-    import src.config
-    import src.train
-    assert True
+    from src import config, train
+    assert hasattr(config, "DATA_DIR")
+    assert callable(train.train)
