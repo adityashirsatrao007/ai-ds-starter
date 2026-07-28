@@ -1,0 +1,23 @@
+# Auto-detect text files
+* text=auto
+
+# DVC files
+.dvc text
+dvc.lock text
+dvc.yaml text
+
+# Python
+*.py diff=python
+
+# Jupyter
+*.ipynb diff=jupyter
+
+# Data files - treat as binary
+*.csv -diff
+*.pkl binary
+*.h5 binary
+*.pt binary
+*.pth binary
+*.onnx binary
+*.joblib binary
+*.pickle binary
