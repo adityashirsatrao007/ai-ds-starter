@@ -23,7 +23,7 @@ wandb>=0.16
 # datasets>=2.14
 
 # Utilities
-tqdm>=4.66
+tqdm>=4.70.0
 pyyaml>=6.0
 python-dotenv>=1.0
 
