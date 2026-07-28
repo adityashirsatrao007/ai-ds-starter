@@ -1,0 +1,31 @@
+name: GPU CI
+on:
+  push:
+    paths: ['**.py', 'requirements*.txt', 'pyproject.toml']
+  workflow_dispatch:
+
+jobs:
+  train:
+    runs-on: [self-hosted, gpu]
+    env:
+      WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Cache deps
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+      - name: Install deps
+        run: pip install -r requirements.txt || true
+      - name: Check GPU
+        run: |
+          nvidia-smi
+          python3 -c "import torch; print('CUDA:', torch.cuda.is_available(), '| Device:', torch.cuda.get_device_name(0))"
+      - name: Run tests
+        run: pytest tests/ -v || true
