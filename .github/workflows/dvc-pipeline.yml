@@ -20,16 +20,16 @@ jobs:
   repro:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
           cache-dependency-path: "requirements.txt"
 
       - name: Cache DVC
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        uses: actions/cache@v4
         with:
           path: |
             .dvc/cache
