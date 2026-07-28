@@ -13,6 +13,8 @@ on:
 
 env:
   PYTHON_VERSION: "3.12"
+  WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+  HF_TOKEN: ${{ secrets.HF_TOKEN }}
 
 jobs:
   repro:
